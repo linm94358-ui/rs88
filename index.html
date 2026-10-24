@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<meta name="theme-color" content="#c5e6cb" />
+<title>Protein Whey · 投资奖金计算器</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+    background: linear-gradient(165deg, #cfe9d1 0%, #c5e6cb 50%, #bfe2ca 100%);
+    min-height: 100vh;
+    color: #26402e;
+    padding: 26px 14px 44px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .container { max-width: 520px; margin: 0 auto; }
+
+  header { text-align: center; margin-bottom: 18px; }
+  header h1 { font-size: 22px; letter-spacing: .5px; color: #1d3a26; }
+  header .badge {
+    display: inline-block; margin-top: 8px;
+    background: rgba(46,125,50,.14); color: #2e7d32;
+    border-radius: 999px; padding: 4px 14px;
+    font-size: 11.5px; font-weight: 700; letter-spacing: .6px;
+  }
+  .rules { margin-top: 12px; display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; }
+  .rules span {
+    background: rgba(255,255,255,.75); border: 1px solid rgba(46,125,50,.18);
+    padding: 4px 12px; border-radius: 9px; font-size: 12.5px; color: #33573e; font-weight: 600;
+  }
+
+  .card {
+    background: rgba(255,255,255,.9);
+    border-radius: 16px; padding: 18px 16px; margin-bottom: 14px;
+    box-shadow: 0 6px 18px rgba(46,125,50,.12);
+  }
+  .sec-title { font-size: 14.5px; font-weight: 800; margin-bottom: 12px; color: #1d3a26; display: flex; align-items: center; gap: 7px; }
+
+  .input-wrap {
+    display: flex; align-items: center;
+    background: #fff; border: 2px solid #a9d3ac; border-radius: 12px; padding: 2px 14px;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .input-wrap:focus-within { border-color: #2e7d32; box-shadow: 0 0 0 3px rgba(46,125,50,.14); }
+  .input-wrap .rm { font-weight: 900; color: #2e7d32; font-size: 16px; margin-right: 6px; }
+  #amount {
+    flex: 1; border: none; outline: none; background: transparent;
+    font-size: 19px; font-weight: 700; color: #1d3323; padding: 12px 0;
+    font-variant-numeric: tabular-nums;
+  }
+  #amount::placeholder { color: #a3bda8; font-weight: 400; font-size: 15px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .chip {
+    border: 1px solid #b7d8ba; background: #f2faf2; color: #2e5d3a;
+    border-radius: 999px; padding: 6px 13px; font-size: 12.5px; font-weight: 600; cursor: pointer;
+    transition: transform .1s, background .2s;
+    font-family: inherit;
+  }
+  .chip:hover { background: #e2f2e3; }
+  .chip:active { transform: scale(.95); }
+
+  .tiers { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px; }
+  .tier {
+    border: 1.5px dashed #b7d8ba; border-radius: 11px; padding: 9px 11px;
+    font-size: 11.5px; color: #4a6a52; background: rgba(255,255,255,.6);
+    transition: all .2s; line-height: 1.45;
+  }
+  .tier b { display: block; font-size: 13.5px; color: #2e7d32; margin-bottom: 2px; }
+  .tier.active { background: #2e7d32; border: 1.5px solid #2e7d32; color: #dff0df; }
+  .tier.active b { color: #fff; }
+
+  .error { display: none; margin-top: 12px; color: #c62828; font-size: 13px; font-weight: 700; }
+  .error.show { display: block; }
+
+  .row {
+    display: flex; justify-content: space-between; align-items: baseline; gap: 10px;
+    padding: 11px 2px; border-bottom: 1px dashed #d5e8d7; font-size: 14px;
+  }
+  .row:last-child { border-bottom: none; }
+  .row .lbl { color: #43614c; font-weight: 600; }
+  .row .lbl i { font-style: normal; font-size: 11.5px; color: #7fa188; margin-left: 6px; }
+  .row .val { font-weight: 800; color: #1d3323; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .row.total {
+    background: #e6f4e7; border-radius: 11px; border-bottom: none;
+    margin-top: 8px; padding: 13px 10px;
+  }
+  .row.total .val { color: #2e7d32; font-size: 19px; }
+
+  .bubble {
+    background: #dcf8c6; border-radius: 3px 14px 14px 14px;
+    padding: 14px 15px; font-size: 13.5px; line-height: 1.7;
+    white-space: pre-line; color: #1f2e14; word-break: break-word;
+    box-shadow: 0 2px 8px rgba(0,0,0,.07); min-height: 56px;
+  }
+  .bubble .ph { color: #8a9b7f; font-style: italic; font-size: 13px; }
+  .bubble b { font-weight: 800; }
+  .hint { margin-top: 9px; font-size: 11.5px; color: #6f8d76; line-height: 1.5; }
+
+  .copy-btn {
+    width: 100%; margin-top: 14px; padding: 15px;
+    font-size: 16px; font-weight: 800; letter-spacing: 1px; color: #fff;
+    background: linear-gradient(135deg, #4caf50, #2e7d32);
+    border: none; border-radius: 13px; cursor: pointer;
+    box-shadow: 0 5px 14px rgba(46,125,50,.35);
+    transition: transform .12s, box-shadow .2s, background .2s;
+    font-family: inherit;
+  }
+  .copy-btn:disabled { background: #b8c9ba; box-shadow: none; cursor: not-allowed; }
+  .copy-btn:not(:disabled):active { transform: translateY(1px) scale(.99); }
+  .copy-btn.copied { background: linear-gradient(135deg, #66bb6a, #388e3c); }
+
+  .note { text-align: center; font-size: 11.5px; color: #5d7f66; line-height: 1.7; margin-top: 4px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>💪 Protein Whey 投资奖金计算器</h1>
+    <div class="badge">PELAN PENGELUARAN SERBUK PROTEIN WHEY</div>
+    <div class="rules">
+      <span>⏳ 150 天</span>
+      <span>📈 日利率 10%</span>
+      <span>💰 RM100 – RM50,000</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <div class="sec-title">📝 输入投资本金</div>
+    <div class="input-wrap">
+      <span class="rm">RM</span>
+      <input id="amount" type="number" inputmode="decimal" min="100" max="50000" step="any" placeholder="请输入 100 – 50,000" />
+    </div>
+    <div class="chips">
+      <button class="chip" data-v="100">RM100</button>
+      <button class="chip" data-v="1000">RM1,000</button>
+      <button class="chip" data-v="3000">RM3,000</button>
+      <button class="chip" data-v="5000">RM5,000</button>
+      <button class="chip" data-v="50000">RM50,000</button>
+    </div>
+    <div class="tiers" id="tiers">
+      <div class="tier" data-rate="0"><b>RM100 – 999</b>无投资奖金</div>
+      <div class="tier" data-rate="5"><b>RM1,000 – 2,999</b>额外赠送 5% 投资奖金</div>
+      <div class="tier" data-rate="7"><b>RM3,000 – 4,999</b>额外赠送 7% 投资奖金</div>
+      <div class="tier" data-rate="10"><b>RM5,000 – 50,000</b>额外赠送 10% 投资奖金</div>
+    </div>
+    <div class="error" id="error"></div>
+  </section>
+
+  <section class="card">
+    <div class="sec-title">🧮 计算结果</div>
+    <div class="row"><span class="lbl">Modal<i>本金</i></span><span class="val" id="rModal">–</span></div>
+    <div class="row"><span class="lbl">Bonus Pelaburan<i>投资奖金</i></span><span class="val" id="rBonus">–</span></div>
+    <div class="row"><span class="lbl">Keuntungan<i>150天总收益</i></span><span class="val" id="rProfit">–</span></div>
+    <div class="row total"><span class="lbl">Modal + Keuntungan<i>到期返还</i></span><span class="val" id="rTotal">–</span></div>
+  </section>
+
+  <section class="card">
+    <div class="sec-title">📋 消息预览（一键复制）</div>
+    <div class="bubble" id="preview"><span class="ph">✏️ 请先输入投资本金，消息将自动生成…</span></div>
+    <button class="copy-btn" id="copyBtn" disabled>📄 一键复制</button>
+    <div class="hint">💡 金额采用 WhatsApp 加粗语法（*…*），粘贴到 WhatsApp 自动加粗；若复制失败可长按预览文字手动复制</div>
+  </section>
+
+  <div class="note">
+    计算公式：Keuntungan = 本金 × 日利率 10% × 150 天<br/>
+    Bonus 按本金档位赠送，适用于 RM1,000 及以上 · 发送前请再次核对金额
+  </div>
+</div>
+
+<script>
+  // ====== 可调参数（如需修改利率/天数/限额，改这里即可）======
+  var DAILY_RATE = 0.10;   // 日利率 10%
+  var DAYS = 150;          // 投资周期（天）
+  var MIN = 100;           // 最低投资金额 RM
+  var MAX = 50000;         // 最高投资金额 RM
+
+  var input = document.getElementById('amount');
+  var errorEl = document.getElementById('error');
+  var rModal = document.getElementById('rModal');
+  var rBonus = document.getElementById('rBonus');
+  var rProfit = document.getElementById('rProfit');
+  var rTotal = document.getElementById('rTotal');
+  var preview = document.getElementById('preview');
+  var copyBtn = document.getElementById('copyBtn');
+  var tierEls = document.querySelectorAll('#tiers .tier');
+
+  var currentMsg = '';
+
+  // 根据本金确定奖金档位
+  function bonusRate(a) {
+    if (a >= 5000) return 0.10;   // RM5,000 – 50,000 → 10%
+    if (a >= 3000) return 0.07;   // RM3,000 – 4,999  → 7%
+    if (a >= 1000) return 0.05;   // RM1,000 – 2,999  → 5%
+    return 0;                     // RM100 – 999      → 无
+  }
+
+  // 数字格式化：千分位，整数不带小数，小数保留两位
+  function fmt(n) {
+    var r = Math.round(n * 100) / 100;
+    var opts = Number.isInteger(r)
+      ? { maximumFractionDigits: 0 }
+      : { minimumFractionDigits: 2, maximumFractionDigits: 2 };
+    return r.toLocaleString('en-US', opts);
+  }
+
+  // 生成要复制的消息文本（金额用 WhatsApp 加粗语法 *…*）
+  function buildMessage(a, bonus, total) {
+    var head = '🎉 Tahniah atas penyertaan anda dalam PELAN PENGELUARAN SERBUK PROTEIN WHEY! 💪';
+    // 本金 < RM1,000 时不显示 dan menerima RM(bonus)!
+    var invest = bonus > 0
+      ? '✨ Berjaya melabur *RM' + fmt(a) + '* dan menerima *RM' + fmt(bonus) + '* bonus pelaburan!'
+      : '✨ Berjaya melabur *RM' + fmt(a) + '*! 🎁';
+    var back = '⏳ Selepas 150 hari, *RM' + fmt(total) + '* akan dikembalikan dengan selamat ke akaun RS anda 💰';
+    var safe = '🛡️ Pelaburan ini dijamin sepenuhnya oleh RS, tenang dan bebas risau! ✅';
+    var future = '🚀 Pelaburan anda kali ini pasti akan membuka masa depan yang lebih cerah untuk anda! 🌈';
+    var tail = 'Mari kita sama-sama nantikan saat tuaian! 🔥';
+    return head + '\n\n' + invest + '\n\n' + back + '\n\n' + safe + '\n\n' + future + '\n\n' + tail;
+  }
+
+  // 预览渲染：将 *…* 渲染为加粗（复制时仍为 WhatsApp 星号语法）
+  function renderPreview(msg) {
+    var esc = msg.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    preview.innerHTML = esc.replace(/\*([^*\n]+)\*/g, '<b>$1</b>');
+  }
+
+  function showError(t) { errorEl.textContent = t; errorEl.classList.add('show'); }
+  function hideError() { errorEl.classList.remove('show'); }
+
+  function clearActiveTier() {
+    tierEls.forEach(function (el) { el.classList.remove('active'); });
+  }
+
+  function resetAll() {
+    rModal.textContent = '–';
+    rBonus.textContent = '–';
+    rProfit.textContent = '–';
+    rTotal.textContent = '–';
+    preview.innerHTML = '<span class="ph">✏️ 请先输入投资本金，消息将自动生成…</span>';
+    copyBtn.disabled = true;
+    copyBtn.textContent = '📄 一键复制';
+    copyBtn.classList.remove('copied');
+    currentMsg = '';
+    clearActiveTier();
+  }
+
+  function update() {
+    var raw = input.value.trim();
+    if (raw === '') { hideError(); resetAll(); return; }
+
+    var a = Number(raw);
+    if (!isFinite(a)) { showError('⚠️ 请输入有效的金额'); resetAll(); return; }
+    if (a < MIN) { showError('⚠️ 最低投资金额为 RM100'); resetAll(); return; }
+    if (a > MAX) { showError('⚠️ 最高投资金额为 RM50,000'); resetAll(); return; }
+    hideError();
+
+    var rate = bonusRate(a);
+    var bonus = a * rate;                    // 投资奖金
+    var profit = a * DAILY_RATE * DAYS;      // 150 天总收益
+    var total = a + profit;                  // modal + keuntungan
+
+    rModal.textContent = 'RM' + fmt(a);
+    rBonus.textContent = rate > 0 ? 'RM' + fmt(bonus) + '（+' + Math.round(rate * 100) + '%）' : '无';
+    rProfit.textContent = 'RM' + fmt(profit);
+    rTotal.textContent = 'RM' + fmt(total);
+
+    tierEls.forEach(function (el) {
+      el.classList.toggle('active', Number(el.dataset.rate) === Math.round(rate * 100));
+    });
+
+    currentMsg = buildMessage(a, bonus, total);
+    renderPreview(currentMsg);
+    copyBtn.disabled = false;
+  }
+
+  input.addEventListener('input', update);
+
+  document.querySelectorAll('.chip').forEach(function (c) {
+    c.addEventListener('click', function () {
+      input.value = c.dataset.v;
+      update();
+    });
+  });
+
+  // 复制：优先 Clipboard API，失败时回退 execCommand（兼容本地 file:// 打开）
+  async function doCopy(text) {
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+    } catch (e) { /* 继续尝试回退方案 */ }
+    try {
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.style.cssText = 'position:fixed;top:-999px;left:-999px;opacity:0;';
+      document.body.appendChild(ta);
+      ta.select();
+      ta.setSelectionRange(0, text.length);
+      var ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+      return ok;
+    } catch (e) { return false; }
+  }
+
+  copyBtn.addEventListener('click', function () {
+    if (!currentMsg) return;
+    doCopy(currentMsg).then(function (ok) {
+      if (ok) {
+        copyBtn.textContent = '✅ 已复制，快去粘贴发送吧！';
+        copyBtn.classList.add('copied');
+        setTimeout(function () {
+          copyBtn.textContent = '📄 一键复制';
+          copyBtn.classList.remove('copied');
+        }, 2000);
+      } else {
+        alert('自动复制失败，请长按预览区文字手动复制');
+      }
+    });
+  });
+
+  resetAll();
+</script>
+</body>
+</html>
